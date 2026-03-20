@@ -21,6 +21,7 @@ Install:
 """
 
 import argparse, csv, json, os, re, random, time
+from normalize import normalize_make, normalize_model
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout
 from playwright_stealth import Stealth
 from bs4 import BeautifulSoup
@@ -36,7 +37,7 @@ CONFIG = {
     "proxy_username": "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
     "proxy_password": "bpKGpmIg89DtkfQO",
     "output_dir":     "output_autoscout",
-    "max_pages":      100,   # 40 per page 
+    "max_pages":      200,   # 5000 records / 40 per page = ~125 pages
     "headless":       True,
     "page_timeout":   60_000,
     "wait_after_load": 2,       # seconds to let JS render
@@ -174,6 +175,7 @@ def send_to_make(records: list, batch_size: int = None):
                 rec.get("date_mec",    ""),  # Mise en circulation
                 rec.get("marque",      ""),  # Marque
                 rec.get("modele",      ""),  # Modèle
+                rec.get("modele_unifie",""),  # Modèle unifié
                 rec.get("lien",        ""),  # Lien de l'annonce
                 rec.get("image",       ""),  # Lien image
                 "autoscout24",               # Source
@@ -443,6 +445,7 @@ def extract_cards(page_or_html, html: str = None) -> list:
                 "vendeur":      vendeur,
                 "localisation": localisation,
                 "lien":         lien,
+                "modele_unifie": normalize_model(marque, modele),
                 "image":        img,
             })
         except Exception as e:
@@ -655,4 +658,3 @@ if __name__ == "__main__":
      2: step2_probe,
      3: step3_one_page,
      4: step4_pagination}.get(args.step, lambda: full_run(args.pages))()
-    #test

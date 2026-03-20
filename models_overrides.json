@@ -1,0 +1,26 @@
+{
+  "bmw": {
+    "4er": "Série 4",
+    "435": "Série 4",
+    "420": "Série 4",
+    "3er": "Série 3",
+    "320": "Série 3",
+    "1er": "Série 1",
+    "118": "Série 1"
+  },
+  "mercedes-benz": {
+    "glc300": "GLC",
+    "c200": "Classe C",
+    "a200": "Classe A",
+    "e200": "Classe E"
+  },
+  "volkswagen": {
+    "golf viii": "Golf",
+    "golf 8": "Golf",
+    "polo vi": "Polo"
+  },
+  "opel": {
+    "corsa-e": "Corsa",
+    "corsa f": "Corsa"
+  }
+}
