@@ -39,6 +39,7 @@ Install :
 
 import argparse, csv, json, os, re, random, time
 from normalize import normalize_make, normalize_model
+from dedup import filter_new_records
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout
 from playwright_stealth import Stealth
 from bs4 import BeautifulSoup
@@ -476,9 +477,13 @@ def step3_one_page():
             print(f"Extraites : {len(cards)} cards")
             if cards:
                 print("Sample :", json.dumps(cards[0], ensure_ascii=False, indent=2))
-            save_json(cards)
-            save_csv(cards)
-            send_to_make(cards)
+            cards = filter_new_records(cards)
+            if cards:
+                save_json(cards)
+                save_csv(cards)
+                send_to_make(cards)
+            else:
+                print("✅ Aucune nouvelle annonce")
             return cards
         except Exception as e:
             print(f"❌ Erreur: {e}")
@@ -536,10 +541,15 @@ def full_run(max_pages: int = None):
         finally:
             browser.close()
 
-    print(f"\n📦 Total : {len(all_cards)} annonces")
-    save_json(all_cards)
-    save_csv(all_cards)
-    send_to_make(all_cards)
+    print(f"\n📦 Total scraped : {len(all_cards)} annonces")
+    all_cards = filter_new_records(all_cards)
+    print(f"📦 Nouvelles annonces : {len(all_cards)}")
+    if all_cards:
+        save_json(all_cards)
+        save_csv(all_cards)
+        send_to_make(all_cards)
+    else:
+        print("✅ Aucune nouvelle annonce à envoyer")
 
 
 # ── ENTRY ──────────────────────────────────────────────────────────────
