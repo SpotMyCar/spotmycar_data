@@ -1,0 +1,37 @@
+name: Automate
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright playwright-stealth beautifulsoup4
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run AutoScout24 scraper
+        run: python scraper_autoscout.py
+        continue-on-error: true
+
+      - name: Run Aramis scraper
+        run: python scraper_aramis.py
+        continue-on-error: true
