@@ -49,7 +49,7 @@ CONFIG = {
     "start_url":          "https://www.aramisauto.com/achat/",
     "base_url":           "https://www.aramisauto.com",
     "output_dir":         "output_aramis",
-    "max_pages":          200,
+    "max_pages":          100,
     "headless":           True,
     "page_timeout":       60_000,
     "wait_after_load":    3,       # secondes pour laisser Vue.js rendre les cards
