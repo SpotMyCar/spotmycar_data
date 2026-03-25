@@ -29,9 +29,13 @@ jobs:
           playwright install-deps chromium
 
       - name: Run AutoScout24 scraper
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python scraper_autoscout.py
         continue-on-error: true
 
       - name: Run Aramis scraper
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python scraper_aramis.py
         continue-on-error: true
