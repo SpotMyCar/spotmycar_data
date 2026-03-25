@@ -34,15 +34,15 @@ CONFIG = {
         "https://www.autoscout24.fr/lst"
         "?sort=age&desc=1&ustate=N%2CU&size=40&page=1&cy=F&atype=C"
     ),
-    "proxy_host":         "proxy.smartproxy.net",
-    "proxy_port":         3120,
-    "proxy_username":     "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
-    "proxy_password":     "bpKGpmIg89DtkfQO",
-    "output_dir":         "output_autoscout",
-    "max_pages":          200,
-    "headless":           True,
-    "page_timeout":       60_000,
-    "wait_after_load":    2,
+    "proxy_host":     "proxy.smartproxy.net",
+    "proxy_port":     3120,
+    "proxy_username": "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
+    "proxy_password": "bpKGpmIg89DtkfQO",
+    "output_dir":     "output_autoscout",
+    "max_pages":      100,   # 5000 records / 40 per page = ~125 pages
+    "headless":       True,
+    "page_timeout":   60_000,
+    "wait_after_load": 2,       # seconds to let JS render
     "wait_between_pages": 1,
     "webhook_url":        "https://hook.eu1.make.com/j7opk3mbec3vmucyygqh2ob2jxx7r0po",
     "webhook_batch_size": 100,
