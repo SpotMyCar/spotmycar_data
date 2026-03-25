@@ -27,32 +27,36 @@ from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout
 from playwright_stealth import Stealth
 from bs4 import BeautifulSoup
 
+
 # ── CONFIG ─────────────────────────────────────────────────────────────
 CONFIG = {
     "start_url": (
         "https://www.autoscout24.fr/lst"
         "?sort=age&desc=1&ustate=N%2CU&size=40&page=1&cy=F&atype=C"
     ),
-    "proxy_host":     "proxy.smartproxy.net",
-    "proxy_port":     3120,
-    "proxy_username": "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
-    "proxy_password": "bpKGpmIg89DtkfQO",
-    "output_dir":     "output_autoscout",
-    "max_pages":      200,   # 5000 records / 40 per page = ~125 pages
-    "headless":       True,
-    "page_timeout":   60_000,
-    "wait_after_load": 2,       # seconds to let JS render
+    "proxy_host":         "proxy.smartproxy.net",
+    "proxy_port":         3120,
+    "proxy_username":     "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
+    "proxy_password":     "bpKGpmIg89DtkfQO",
+    "output_dir":         "output_autoscout",
+    "max_pages":          200,
+    "headless":           True,
+    "page_timeout":       60_000,
+    "wait_after_load":    2,
     "wait_between_pages": 1,
-    # Make.com webhook — set to None to disable
-    "webhook_url": "https://hook.eu1.make.com/j7opk3mbec3vmucyygqh2ob2jxx7r0po",
-    "webhook_batch_size": 100,   # send records in batches of this size
+    "webhook_url":        "https://hook.eu1.make.com/j7opk3mbec3vmucyygqh2ob2jxx7r0po",
+    "webhook_batch_size": 100,
 }
+
+SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces"
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
 ]
+
 
 # ── SETUP ──────────────────────────────────────────────────────────────
 os.makedirs(CONFIG["output_dir"], exist_ok=True)
@@ -135,107 +139,81 @@ def save_csv(data):
     print(f"✅ CSV  → {path}")
 
 
-# ── MAKE.COM WEBHOOK ───────────────────────────────────────────────────
+# ── SUPABASE ───────────────────────────────────────────────────────────
 
-def send_to_make(records: list, batch_size: int = None):
+def send_to_supabase(records: list):
     """
-    Send records to Make.com via webhook.
-    Batches are sent in parallel (up to 4 threads) to avoid slow sequential HTTP calls.
-
-    In Make.com, after the Custom Webhook trigger:
-      - Use an Iterator module to loop over the array items
-      - Each item then has all fields: titre, prix, annee, etc.
+    Envoie les annonces directement à Supabase via l'API REST.
+    Utilise upsert sur lien_annonce pour ignorer les doublons automatiquement.
     """
     import urllib.request, urllib.error
 
-    url = CONFIG.get("webhook_url")
-    if not url:
-        print("  ⚠️  No webhook_url configured — skipping")
-        return
+    headers = {
+        "Content-Type":  "application/json",
+        "apikey":        SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Prefer":        "resolution=ignore-duplicates",
+    }
 
-    if batch_size is None:
-        batch_size = CONFIG.get("webhook_batch_size", 100)
+    batch_size    = 100
+    sent          = 0
+    errors        = 0
+    total_batches = (len(records) + batch_size - 1) // batch_size
 
-    batches = [records[i: i + batch_size] for i in range(0, len(records), batch_size)]
-    total_batches = len(batches)
-    sent = 0
-    errors = 0
+    print(f"\n📤 Envoi de {len(records):,} annonces vers Supabase...")
 
-    print(f"\n📤 Sending {len(records):,} records to Make.com in {total_batches} batches (sequential)...")
+    for i in range(0, len(records), batch_size):
+        batch     = records[i: i + batch_size]
+        batch_num = i // batch_size + 1
 
-    # Columns sent to Google Sheets — order must match your sheet header:
-    # Description | Prix | Kilométrage | Mise en circulation | Marque | Modèle | Lien annonce | Lien image | Source
-    # Commented-out fields kept for reference: version, annee, carburant, puissance, vendeur, localisation
+        rows = []
+        for rec in batch:
+            prix_raw = (
+                rec.get("prix", "")
+                .replace(" €", "").replace("€", "")
+                .replace("\u202f", "").replace("\xa0", "").replace(" ", "")
+                .strip()
+            )
+            km_raw = (
+                rec.get("kilometrage", "")
+                .replace(" km", "").replace("km", "")
+                .replace("\u202f", "").replace("\xa0", "").replace(" ", "")
+                .strip()
+            )
+            rows.append({
+                "titre":         rec.get("titre",         ""),
+                "prix":          float(prix_raw) if prix_raw.replace(".", "").isdigit() else None,
+                "kilometrage":   float(km_raw)   if km_raw.isdigit()                    else None,
+                "date_voiture":  rec.get("date_mec", rec.get("annee", "")),
+                "marque":        rec.get("marque",        ""),
+                "modele":        rec.get("modele",        ""),
+                "modele_unifie": rec.get("modele_unifie", ""),
+                "lien_annonce":  rec.get("lien",          ""),
+                "lien_image":    rec.get("image",         ""),
+                "source":        rec.get("source",        ""),
+            })
 
-    def post_batch(batch_num, batch):
-        rows = [
-            [
-                rec.get("titre",       ""),  # Description
-                rec.get("prix",        "").replace(" €", "").replace("€", "").strip(),  # Prix (chiffre seul)
-                rec.get("kilometrage", "").replace(" km", "").replace("km", "").strip(),  # Kilométrage (chiffre seul)
-                rec.get("date_mec",    ""),  # Mise en circulation
-                rec.get("marque",      ""),  # Marque
-                rec.get("modele",      ""),  # Modèle
-                rec.get("modele_unifie",""),  # Modèle unifié
-                rec.get("lien",        ""),  # Lien de l'annonce
-                rec.get("image",       ""),  # Lien image
-                "autoscout24",               # Source
-            ]
-            for rec in batch
-        ]
-        payload = json.dumps({"values": rows}, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(
-            url, data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            status = resp.status
-            body   = resp.read().decode("utf-8", errors="ignore")
-        # Make.com returns "Accepted" when it queued the webhook successfully
-        if status != 200 or "Accepted" not in body:
-            raise Exception(f"Unexpected response {status}: {body[:100]}")
-        return status, len(batch)
-
-    for i, batch in enumerate(batches):
-        batch_num = i + 1
+        payload = json.dumps(rows, ensure_ascii=False).encode("utf-8")
         try:
-            status, count = post_batch(batch_num, batch)
-            sent += count
-            print(f"  Batch {batch_num}/{total_batches} → {status}  ({sent:,} records sent)")
+            req = urllib.request.Request(SUPABASE_URL, data=payload, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                status = resp.status
+            sent += len(batch)
+            print(f"  Batch {batch_num}/{total_batches} → {status}  ({sent:,} envoyées)")
         except urllib.error.HTTPError as e:
             errors += 1
-            print(f"  ❌ Batch {batch_num} HTTP error {e.code}: {e.reason}")
+            body = e.read().decode("utf-8", errors="ignore")
+            print(f"  ❌ Batch {batch_num} HTTP {e.code}: {body[:100]}")
         except Exception as e:
             errors += 1
-            print(f"  ❌ Batch {batch_num} error: {e}")
-        if batch_num < total_batches:
-            time.sleep(5)  # give Make.com time to finish the Google Sheets append before next batch
+            print(f"  ❌ Batch {batch_num} erreur: {e}")
+        if i + batch_size < len(records):
+            time.sleep(0.5)
 
-    print(f"✅ Webhook done — {sent:,} sent, {errors} errors")
+    print(f"✅ Supabase — {sent:,} envoyées, {errors} erreurs")
 
 
-# ── EXTRACTION ─────────────────────────────────────────────────────────
-#
-# AutoScout24 card inner_text() has a FIXED line structure (confirmed from live dump):
-#
-#   Line  0  →  "Opel Mokka"               marque + modele
-#   Line  1  →  "1.2 Turbo 130ch GS Line"  version
-#   Line  2  →  "Sauver"                   SKIP (save button)
-#   Line  3  →  "20"                       SKIP (photo count)
-#   Line  4  →  "€ 14 490"                 prix
-#   Line  5  →  "Excellente offre"         SKIP (deal label)
-#   Line  6  →  "03/2021"                  date_mec (MM/YYYY)
-#   Line  7  →  "42 212 km"                kilometrage
-#   Line  8  →  "Essence"                  carburant
-#   Line  9  →  "97 kW (132 Ch)"           puissance
-#   Line 10  →  "PREMIUM AUTO…"            vendeur
-#   Line 11  →  "FR-81100 Castres"         localisation
-#
-# Prix  → read from line 4 ONLY, strip "€" and spaces  → "14 490 €"
-# Km    → read from line 7 ONLY, strip all non-digits  → "42212 km"
-# No full-text regex scanning — that caused the garbage values before.
-# JSON-LD kept as fallback for boite/couleur and safety net for missing fields.
+# ── HELPERS ────────────────────────────────────────────────────────────
 
 def _clean(s: str) -> str:
     return " ".join(s.split()).strip()
@@ -292,22 +270,24 @@ def _extract_from_jsonld(soup) -> list:
     return results
 
 
+# ── EXTRACTION ─────────────────────────────────────────────────────────
+
 def extract_cards(page_or_html, html: str = None) -> list:
     """
     Extract all listing cards from a Playwright page or raw HTML string.
 
     AutoScout24 encodes structured data directly in data-* attributes on each
     <article> tag — no JSON-LD, no link inside the article. We read:
-      data-guid          → lien (https://www.autoscout24.fr/annonces/{guid})
-      data-price         → prix
-      data-mileage       → kilometrage
-      data-make          → marque
-      data-model         → modele
+      data-guid               → lien
+      data-price              → prix
+      data-mileage            → kilometrage
+      data-make               → marque
+      data-model              → modele
       data-first-registration → date_mec / annee
-      data-fuel-type     → carburant (code, mapped to label)
-      data-seller-type   → type vendeur
+      data-fuel-type          → carburant (code, mapped to label)
+      data-seller-type        → type vendeur
     The remaining fields (titre, version, puissance, vendeur, localisation)
-    come from inner_text() line positions — same confirmed structure as before.
+    come from inner_text() line positions.
     """
     FUEL_MAP = {
         "b": "Essence", "d": "Diesel", "e": "Électrique",
@@ -315,9 +295,9 @@ def extract_cards(page_or_html, html: str = None) -> list:
     }
 
     if isinstance(page_or_html, str):
-        html     = page_or_html
-        soup     = BeautifulSoup(html, "html.parser")
-        articles = soup.find_all("article")
+        html      = page_or_html
+        soup      = BeautifulSoup(html, "html.parser")
+        articles  = soup.find_all("article")
         cards_raw = []
         for art in articles:
             a = next((t for t in art.find_all("a", href=True)
@@ -329,23 +309,18 @@ def extract_cards(page_or_html, html: str = None) -> list:
                 "href":  a["href"] if a else "",
             })
     else:
-        # Single JS call — collect data-* attrs, innerText and img src at once
-        # Wait until at least one /offres/ link is injected by JS (max 5s)
         try:
             page_or_html.wait_for_selector('a[href*="/offres/"]', timeout=5000)
         except Exception:
-            pass  # proceed anyway, links may still be partially loaded
+            pass
 
         cards_raw = page_or_html.evaluate("""() => {
-            // Build guid -> clean /offres/ path from all links on the page
-            // AutoScout24 injects hrefs via JS — they appear on the page but not inside <article>
             const guidToUrl = {};
             for (const a of document.querySelectorAll('a[href]')) {
                 const href = a.getAttribute('href') || '';
                 if (!href.includes('/offres/')) continue;
                 const path  = href.split('?')[0];
                 const parts = path.split('-');
-                // UUID is always the last 5 dash-groups: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
                 const guid  = parts.slice(-5).join('-');
                 if (guid && !guidToUrl[guid]) guidToUrl[guid] = path;
             }
@@ -376,17 +351,13 @@ def extract_cards(page_or_html, html: str = None) -> list:
             def get(idx):
                 return lines[idx] if idx < len(lines) else "N/A"
 
-            # ── Lien — built from data-* attributes, no JS dependency ──
-            # Pattern: /offres/{make}-{model}-{fuel}-{color}-{guid}
-            # We use the data we already have to reconstruct the slug
-            guid      = attrs.get("data-guid", attrs.get("id", ""))
-            href      = card.get("href", "")
+            guid = attrs.get("data-guid", attrs.get("id", ""))
+            href = card.get("href", "")
             if href.startswith("http"):
                 lien = href.split("?")[0]
             elif href.startswith("/offres/"):
                 lien = f"https://www.autoscout24.fr{href.split('?')[0]}"
             elif guid:
-                # Reconstruct slug from data-make, data-model, data-fuel-type, data-guid
                 make_slug  = attrs.get("data-make",  "").lower().replace(" ", "-")
                 model_slug = attrs.get("data-model", "").lower().replace(" ", "-")
                 fuel_slug  = FUEL_MAP.get(attrs.get("data-fuel-type", ""), "").lower()
@@ -395,20 +366,16 @@ def extract_cards(page_or_html, html: str = None) -> list:
             else:
                 lien = "N/A"
 
-            # ── Prix — data-price is a clean integer ──────────────────
-            prix_raw = attrs.get("data-price", "")
-            prix     = f"{prix_raw} €" if prix_raw else "N/A"
+            prix_raw    = attrs.get("data-price", "")
+            prix        = f"{prix_raw} €" if prix_raw else "N/A"
 
-            # ── Kilometrage — data-mileage is a clean integer ─────────
             km_raw      = attrs.get("data-mileage", "")
             kilometrage = f"{km_raw} km" if km_raw else "N/A"
 
-            # ── Marque / Modele — data-make, data-model ───────────────
             marque = attrs.get("data-make", get(0).split()[0] if get(0) != "N/A" else "N/A").title()
             modele = attrs.get("data-model", " ".join(get(0).split()[1:]) if get(0) != "N/A" else "N/A").upper()
 
-            # ── Date MEC / Annee — data-first-registration: "11-2022" ─
-            reg    = attrs.get("data-first-registration", "")   # "MM-YYYY"
+            reg = attrs.get("data-first-registration", "")
             if reg and "-" in reg:
                 mm, yyyy = reg.split("-", 1)
                 date_mec = f"{mm}/{yyyy}"
@@ -417,37 +384,32 @@ def extract_cards(page_or_html, html: str = None) -> list:
                 date_mec = "N/A"
                 annee    = "N/A"
 
-            # ── Carburant — data-fuel-type is a short code ────────────
             fuel_code = attrs.get("data-fuel-type", "")
             carburant = FUEL_MAP.get(fuel_code, fuel_code.capitalize() if fuel_code else "N/A")
 
-            # ── Remaining from inner_text lines ───────────────────────
-            # Line 0: "Marque Modele"   Line 1: version
-            # Line 2: "Sauver"  Line 3: photo count  Line 4: prix
-            # Line 5: deal label  Line 6: date_mec  Line 7: km
-            # Line 8: carburant  Line 9: puissance  Line 10: vendeur  Line 11: localisation
-            titre       = _clean(f"{get(0)} {get(1)}")
-            version     = get(1)
-            puissance   = get(9)
-            vendeur     = get(10)
+            titre        = _clean(f"{get(0)} {get(1)}")
+            version      = get(1)
+            puissance    = get(9)
+            vendeur      = get(10)
             localisation = get(11)
 
             results.append({
-                "titre":        titre,
-                "marque":       marque,
-                "modele":       modele,
-                "version":      version,
-                "prix":         prix,
-                "annee":        annee,
-                "date_mec":     date_mec,
-                "kilometrage":  kilometrage,
-                "carburant":    carburant,
-                "puissance":    puissance,
-                "vendeur":      vendeur,
-                "localisation": localisation,
-                "lien":         lien,
+                "titre":         titre,
+                "marque":        marque,
+                "modele":        modele,
+                "version":       version,
+                "prix":          prix,
+                "annee":         annee,
+                "date_mec":      date_mec,
+                "kilometrage":   kilometrage,
+                "carburant":     carburant,
+                "puissance":     puissance,
+                "vendeur":       vendeur,
+                "localisation":  localisation,
+                "source":        "autoscout24",
+                "lien":          lien,
                 "modele_unifie": normalize_model(marque, modele),
-                "image":        img,
+                "image":         img,
             })
         except Exception as e:
             print(f"  ⚠️  Article {i} error: {e}")
@@ -456,11 +418,6 @@ def extract_cards(page_or_html, html: str = None) -> list:
 
 
 def get_next_page_url(current_url: str, page_num: int) -> str:
-    """
-    Build the next page URL by incrementing ?page=N.
-    AutoScout24 uses clean page params — no need to parse HTML for a next button.
-    The caller stops when a page returns 0 cards.
-    """
     if "page=" in current_url:
         return re.sub(r'(page=)\d+', f'\\g<1>{page_num}', current_url)
     sep = "&" if "?" in current_url else "?"
@@ -486,8 +443,6 @@ def step1_check_proxy():
 
 def step2_probe():
     print("\n━━━ STEP 2: Probe page ━━━")
-
-    # Try without proxy first, then with
     for use_proxy in [False, True]:
         label = "with proxy" if use_proxy else "no proxy"
         print(f"\n  [{label}]")
@@ -511,7 +466,6 @@ def step2_probe():
                 if cards:
                     print(f"  Sample: {json.dumps(cards[0], ensure_ascii=False, indent=2)}")
 
-                # Save HTML
                 path = os.path.join(CONFIG["output_dir"], f"probe_{'proxy' if use_proxy else 'direct'}.html")
                 with open(path, "w", encoding="utf-8") as f:
                     f.write(html)
@@ -530,7 +484,7 @@ def step2_probe():
 def step3_one_page():
     print("\n━━━ STEP 3: Extract one page ━━━")
     with sync_playwright() as pw:
-        browser = make_browser(pw, use_proxy=False)  # switch to True if step2 showed proxy works
+        browser = make_browser(pw, use_proxy=False)
         page = make_page(browser)
         try:
             page.goto(CONFIG["start_url"], timeout=CONFIG["page_timeout"], wait_until="domcontentloaded")
@@ -550,7 +504,7 @@ def step3_one_page():
             if cards:
                 save_json(cards)
                 save_csv(cards)
-                send_to_make(cards)
+                send_to_supabase(cards)
             else:
                 print("✅ Aucune nouvelle annonce")
             return cards
@@ -575,7 +529,7 @@ def step4_pagination():
                 if page_num == 1:
                     accept_cookies(page)
 
-                html = page.content()
+                html  = page.content()
                 cards = extract_cards(page)
                 blocked = is_blocked(html)
                 print(f"  Cards: {len(cards)}  |  Blocked: {blocked}")
@@ -587,7 +541,7 @@ def step4_pagination():
                     print("  0 cards — last page reached")
                     break
                 time.sleep(CONFIG["wait_between_pages"])
-            print(f"\n✅ Pagination test done")
+            print("\n✅ Pagination test done")
         except Exception as e:
             print(f"❌ Error: {e}")
         finally:
@@ -597,15 +551,15 @@ def step4_pagination():
 # ── FULL RUN ───────────────────────────────────────────────────────────
 
 def full_run(max_pages: int = None):
-    limit = max_pages or CONFIG["max_pages"]
+    limit     = max_pages or CONFIG["max_pages"]
     print(f"\n━━━ FULL RUN — max {limit} pages (~{limit * 40:,} records max) ━━━")
     all_cards = []
-    url = CONFIG["start_url"]
-    use_proxy = False   # flip to True if direct is blocked
+    url       = CONFIG["start_url"]
+    use_proxy = False
 
     with sync_playwright() as pw:
-        browser = make_browser(pw, use_proxy=use_proxy)
-        page = make_page(browser)
+        browser  = make_browser(pw, use_proxy=use_proxy)
+        page     = make_page(browser)
         page_num = 1
 
         try:
@@ -651,7 +605,7 @@ def full_run(max_pages: int = None):
     if all_cards:
         save_json(all_cards)
         save_csv(all_cards)
-        send_to_make(all_cards)
+        send_to_supabase(all_cards)
     else:
         print("✅ Aucune nouvelle annonce à envoyer")
 

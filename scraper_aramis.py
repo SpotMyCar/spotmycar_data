@@ -1,12 +1,14 @@
 """
 Aramisauto.com scraper — Playwright + Make.com
 
+
 Collecte depuis chaque fiche véhicule :
   - titre, marque, modele, version, finition
   - prix, prix_origine, economie
   - annee, carburant, boite, kilometrage
   - disponibilite, mensualite
   - lien, image
+
 
 Structure de la card (inner_text confirmée) :
   Line  0  → "24 heures"              disponibilite
@@ -25,6 +27,7 @@ Structure de la card (inner_text confirmée) :
   Line 13  → "40 450 €"               prix_origine
   Line 14  → "Économisez 10 451 €..." economie
 
+
 Steps :
   python scraper_aramis.py --step 1   → probe page (sélecteurs, sample)
   python scraper_aramis.py --step 2   → pagination test (5 pages)
@@ -32,10 +35,12 @@ Steps :
   python scraper_aramis.py            → full run
   python scraper_aramis.py --pages 10 → full run limité à 10 pages
 
+
 Install :
   pip install playwright playwright-stealth beautifulsoup4
   playwright install chromium
 """
+
 
 import argparse, csv, json, os, re, random, time
 from normalize import normalize_make, normalize_model
@@ -43,6 +48,7 @@ from dedup import filter_new_records
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout
 from playwright_stealth import Stealth
 from bs4 import BeautifulSoup
+
 
 # ── CONFIG ─────────────────────────────────────────────────────────────
 CONFIG = {
@@ -52,12 +58,15 @@ CONFIG = {
     "max_pages":          200,
     "headless":           True,
     "page_timeout":       60_000,
-    "wait_after_load":    3,       # secondes pour laisser Vue.js rendre les cards
+    "wait_after_load":    3,
     "wait_between_pages": 1,
-    # Make.com webhook — mettre None pour désactiver
     "webhook_url":        "https://hook.eu1.make.com/j7opk3mbec3vmucyygqh2ob2jxx7r0po",
     "webhook_batch_size": 100,
 }
+
+SUPABASE_URL     = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces"
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+
 
 USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -139,102 +148,81 @@ def save_csv(data):
     print(f"✅ CSV  → {path}")
 
 
-# ── MAKE.COM WEBHOOK ───────────────────────────────────────────────────
+# ── SUPABASE ───────────────────────────────────────────────────────────
 
-def send_to_make(records: list, batch_size: int = None):
+def send_to_supabase(records: list):
     """
-    Envoie les annonces au webhook Make.com en batches séquentiels.
-    Payload formaté pour l'API Google Sheets v4 /append :
-      {"values": [[col1, col2, ...], [col1, col2, ...], ...]}
-
-    Colonnes envoyées (dans l'ordre) :
-      Description | Prix | Kilométrage | Mise en circulation | Marque | Modèle | Lien | Image | Source
+    Envoie les annonces directement à Supabase via l'API REST.
+    Utilise upsert sur lien_annonce pour ignorer les doublons automatiquement.
     """
     import urllib.request, urllib.error
 
-    url = CONFIG.get("webhook_url")
-    if not url:
-        print("  ⚠️  Pas de webhook_url configuré — envoi désactivé")
-        return
+    headers = {
+        "Content-Type":  "application/json",
+        "apikey":        SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Prefer":        "resolution=ignore-duplicates",
+    }
 
-    if batch_size is None:
-        batch_size = CONFIG.get("webhook_batch_size", 100)
-
-    batches       = [records[i: i + batch_size] for i in range(0, len(records), batch_size)]
-    total_batches = len(batches)
+    batch_size    = 100
     sent          = 0
     errors        = 0
+    total_batches = (len(records) + batch_size - 1) // batch_size
 
-    print(f"\n📤 Envoi de {len(records):,} annonces vers Make.com ({total_batches} batches séquentiels)...")
+    print(f"\n📤 Envoi de {len(records):,} annonces vers Supabase...")
 
-    def post_batch(batch):
-        rows = [
-            [
-                rec.get("titre",        ""),                                               # Description
-                rec.get("prix",         "").replace(" €", "").replace("€", "").replace(" ", "").strip(),  # Prix
-                rec.get("kilometrage",  "").replace(" km", "").replace("km", "").strip(),  # Kilométrage
-                rec.get("annee",        ""),                                               # Mise en circulation
-                rec.get("marque",       ""),                                               # Marque
-                rec.get("modele",       ""),                                               # Modèle
-                rec.get("modele_unifie",""),                                              # Modèle unifié
-                rec.get("lien",         ""),                                               # Lien
-                rec.get("image",        ""),                                               # Image
-                "aramisauto",                                                              # Source
-            ]
-            for rec in batch
-        ]
-        payload = json.dumps({"values": rows}, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(
-            url, data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            status = resp.status
-            body   = resp.read().decode("utf-8", errors="ignore")
-        if status != 200 or "Accepted" not in body:
-            raise Exception(f"Réponse inattendue {status}: {body[:100]}")
-        return status, len(batch)
+    for i in range(0, len(records), batch_size):
+        batch     = records[i: i + batch_size]
+        batch_num = i // batch_size + 1
 
-    for i, batch in enumerate(batches):
-        batch_num = i + 1
+        rows = []
+        for rec in batch:
+            prix_raw = (
+                rec.get("prix", "")
+                .replace(" €", "").replace("€", "")
+                .replace("\u202f", "").replace("\xa0", "").replace(" ", "")
+                .strip()
+            )
+            km_raw = (
+                rec.get("kilometrage", "")
+                .replace(" km", "").replace("km", "")
+                .replace("\u202f", "").replace("\xa0", "").replace(" ", "")
+                .strip()
+            )
+            rows.append({
+                "titre":         rec.get("titre",         ""),
+                "prix":          float(prix_raw) if prix_raw.replace(".", "").isdigit() else None,
+                "kilometrage":   float(km_raw)   if km_raw.isdigit()                    else None,
+                "date_voiture":  rec.get("date_mec", rec.get("annee", "")),
+                "marque":        rec.get("marque",        ""),
+                "modele":        rec.get("modele",        ""),
+                "modele_unifie": rec.get("modele_unifie", ""),
+                "lien_annonce":  rec.get("lien",          ""),
+                "lien_image":    rec.get("image",         ""),
+                "source":        rec.get("source",        ""),
+            })
+
+        payload = json.dumps(rows, ensure_ascii=False).encode("utf-8")
         try:
-            status, count = post_batch(batch)
-            sent += count
-            print(f"  Batch {batch_num}/{total_batches} → {status}  ({sent:,} annonces envoyées)")
+            req = urllib.request.Request(SUPABASE_URL, data=payload, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                status = resp.status
+            sent += len(batch)
+            print(f"  Batch {batch_num}/{total_batches} → {status}  ({sent:,} envoyées)")
         except urllib.error.HTTPError as e:
             errors += 1
-            print(f"  ❌ Batch {batch_num} HTTP {e.code}: {e.reason}")
+            body = e.read().decode("utf-8", errors="ignore")
+            print(f"  ❌ Batch {batch_num} HTTP {e.code}: {body[:100]}")
         except Exception as e:
             errors += 1
             print(f"  ❌ Batch {batch_num} erreur: {e}")
-        if batch_num < total_batches:
-            time.sleep(5)  # laisser Make.com finir l'append avant le batch suivant
+        if i + batch_size < len(records):
+            time.sleep(0.5)
 
-    print(f"✅ Webhook terminé — {sent:,} envoyées, {errors} erreurs")
+    print(f"✅ Supabase — {sent:,} envoyées, {errors} erreurs")
 
 
-# ── EXTRACTION ─────────────────────────────────────────────────────────
-#
-# Structure inner_text d'une card Aramis (confirmée) :
-#
-#   Line  0  → "24 heures"              disponibilite (délai de livraison)
-#   Line  1  → "Kia Sportage"           marque + modele
-#   Line  2  → "Hybride 239 ch BVA6"   version
-#   Line  3  → "•"                      SKIP
-#   Line  4  → "Active"                 finition
-#   Line  5  → "Hybride essence"        carburant
-#   Line  6  → "•"                      SKIP
-#   Line  7  → "Auto."                  boite
-#   Line  8  → "2026"                   annee
-#   Line  9  → "•"                      SKIP
-#   Line 10  → "Voiture 0 km"           kilometrage brut
-#   Line 11  → "29 999 €"               prix soldé
-#   Line 12  → "Dès 114 €/mois"         mensualite
-#   Line 13  → "40 450 €"               prix catalogue
-#   Line 14  → "Économisez 10 451 €..." economie
-#
-# Le lien, la marque, le modèle et l'offre ID sont dans les attributs du <a>.
+# ── HELPERS ────────────────────────────────────────────────────────────
 
 def _clean(s: str) -> str:
     return " ".join(s.split()).strip()
@@ -245,21 +233,28 @@ def _parse_price(s: str) -> str:
     digits = re.sub(r"\s+", " ", digits).strip()
     return f"{digits} €" if digits else "N/A"
 
+
 def _is_price(s: str) -> bool:
     return bool(re.search(r"\d", s) and "€" in s and "/mois" not in s)
+
 
 def _is_mensualite(s: str) -> bool:
     return "/mois" in s.lower()
 
+
 def _is_km(s: str) -> bool:
     return "km" in s.lower() and "wltp" not in s.lower()
+
 
 def _is_wltp(s: str) -> bool:
     return "wltp" in s.lower()
 
+
 def _is_annee(s: str) -> bool:
     return bool(re.fullmatch(r"20\d{2}", s.strip()))
 
+
+# ── EXTRACTION ─────────────────────────────────────────────────────────
 
 def extract_cards(page_or_html) -> list:
     """
@@ -309,7 +304,6 @@ def extract_cards(page_or_html) -> list:
             img   = card["img"]
             href  = card["href"]
 
-            # Supprimer les séparateurs "•" — ils ne portent aucune info
             lines = [_clean(ln) for ln in card["text"].splitlines()
                      if _clean(ln) and _clean(ln) != "•"]
 
@@ -334,12 +328,12 @@ def extract_cards(page_or_html) -> list:
             boite         = lines[5] if len(lines) > 5 else "N/A"
 
             # ── Reste : lu par contenu ────────────────────────────────
-            annee        = "N/A"
-            kilometrage  = "N/A"
-            autonomie    = "N/A"
-            mensualite   = "N/A"
-            economie     = "N/A"
-            prix_list    = []  # [0] = prix soldé, [1] = prix catalogue
+            annee       = "N/A"
+            kilometrage = "N/A"
+            autonomie   = "N/A"
+            mensualite  = "N/A"
+            economie    = "N/A"
+            prix_list   = []
 
             for ln in lines[6:]:
                 if _is_annee(ln) and annee == "N/A":
@@ -353,7 +347,7 @@ def extract_cards(page_or_html) -> list:
                 elif _is_mensualite(ln):
                     mensualite = ln
                 elif "conomisez" in ln.lower() or ("%" in ln and "€" in ln and re.search(r"-\d+%", ln)):
-                    economie = ln   # tester avant _is_price car "Économisez X €" déclenche aussi _is_price
+                    economie = ln
                 elif _is_price(ln):
                     prix_list.append(_parse_price(ln))
 
@@ -376,6 +370,7 @@ def extract_cards(page_or_html) -> list:
                 "carburant":     carburant,
                 "boite":         boite,
                 "disponibilite": disponibilite,
+                "source":        "aramisauto",
                 "lien":          lien,
                 "modele_unifie": normalize_model(marque, modele),
                 "image":         img,
@@ -481,7 +476,7 @@ def step3_one_page():
             if cards:
                 save_json(cards)
                 save_csv(cards)
-                send_to_make(cards)
+                send_to_supabase(cards)
             else:
                 print("✅ Aucune nouvelle annonce")
             return cards
@@ -500,8 +495,8 @@ def full_run(max_pages: int = None):
     all_cards = []
 
     with sync_playwright() as pw:
-        browser = make_browser(pw)
-        page    = make_page(browser)
+        browser  = make_browser(pw)
+        page     = make_page(browser)
         page_num = 1
 
         try:
@@ -547,7 +542,7 @@ def full_run(max_pages: int = None):
     if all_cards:
         save_json(all_cards)
         save_csv(all_cards)
-        send_to_make(all_cards)
+        send_to_supabase(all_cards)
     else:
         print("✅ Aucune nouvelle annonce à envoyer")
 
