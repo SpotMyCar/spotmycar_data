@@ -21,8 +21,7 @@ Install:
 """
 
 import argparse, csv, json, os, re, random, time
-from normalize import normalize_make, normalize_model
-from dedup import filter_new_records
+from normalize import normalize_make, normalize_model, get_generation
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout
 from playwright_stealth import Stealth
 from bs4 import BeautifulSoup
@@ -34,15 +33,15 @@ CONFIG = {
         "https://www.autoscout24.fr/lst"
         "?sort=age&desc=1&ustate=N%2CU&size=40&page=1&cy=F&atype=C"
     ),
-    "proxy_host":     "proxy.smartproxy.net",
-    "proxy_port":     3120,
-    "proxy_username": "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
-    "proxy_password": "bpKGpmIg89DtkfQO",
-    "output_dir":     "output_autoscout",
-    "max_pages":      100,   # 5000 records / 40 per page = ~125 pages
-    "headless":       True,
-    "page_timeout":   60_000,
-    "wait_after_load": 2,       # seconds to let JS render
+    "proxy_host":         "proxy.smartproxy.net",
+    "proxy_port":         3120,
+    "proxy_username":     "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
+    "proxy_password":     "bpKGpmIg89DtkfQO",
+    "output_dir":         "output_autoscout",
+    "max_pages":          10,
+    "headless":           True,
+    "page_timeout":       60_000,
+    "wait_after_load":    2,
     "wait_between_pages": 1,
     "webhook_url":        "https://hook.eu1.make.com/j7opk3mbec3vmucyygqh2ob2jxx7r0po",
     "webhook_batch_size": 100,
@@ -142,10 +141,6 @@ def save_csv(data):
 # ── SUPABASE ───────────────────────────────────────────────────────────
 
 def send_to_supabase(records: list):
-    """
-    Envoie les annonces directement à Supabase via l'API REST.
-    Utilise upsert sur lien_annonce pour ignorer les doublons automatiquement.
-    """
     import urllib.request, urllib.error
 
     headers = {
@@ -188,6 +183,7 @@ def send_to_supabase(records: list):
                 "marque":        rec.get("marque",        ""),
                 "modele":        rec.get("modele",        ""),
                 "modele_unifie": rec.get("modele_unifie", ""),
+                "generation": rec.get("generation", "N/A"),
                 "lien_annonce":  rec.get("lien",          ""),
                 "lien_image":    rec.get("image",         ""),
                 "source":        rec.get("source",        ""),
@@ -220,11 +216,6 @@ def _clean(s: str) -> str:
 
 
 def _extract_from_jsonld(soup) -> list:
-    """
-    Parse JSON-LD structured data embedded in the page.
-    Used as fallback/supplement for fields not in inner_text:
-    boite, couleur, and safety net if line positions ever shift.
-    """
     results = []
     for script in soup.find_all("script", type="application/ld+json"):
         try:
@@ -273,22 +264,6 @@ def _extract_from_jsonld(soup) -> list:
 # ── EXTRACTION ─────────────────────────────────────────────────────────
 
 def extract_cards(page_or_html, html: str = None) -> list:
-    """
-    Extract all listing cards from a Playwright page or raw HTML string.
-
-    AutoScout24 encodes structured data directly in data-* attributes on each
-    <article> tag — no JSON-LD, no link inside the article. We read:
-      data-guid               → lien
-      data-price              → prix
-      data-mileage            → kilometrage
-      data-make               → marque
-      data-model              → modele
-      data-first-registration → date_mec / annee
-      data-fuel-type          → carburant (code, mapped to label)
-      data-seller-type        → type vendeur
-    The remaining fields (titre, version, puissance, vendeur, localisation)
-    come from inner_text() line positions.
-    """
     FUEL_MAP = {
         "b": "Essence", "d": "Diesel", "e": "Électrique",
         "h": "Hybride", "l": "GPL",    "g": "GNV", "m": "Mild-Hybrid",
@@ -393,6 +368,8 @@ def extract_cards(page_or_html, html: str = None) -> list:
             vendeur      = get(10)
             localisation = get(11)
 
+            modele_unifie = normalize_model(marque, modele)
+
             results.append({
                 "titre":         titre,
                 "marque":        marque,
@@ -408,7 +385,8 @@ def extract_cards(page_or_html, html: str = None) -> list:
                 "localisation":  localisation,
                 "source":        "autoscout24",
                 "lien":          lien,
-                "modele_unifie": normalize_model(marque, modele),
+                "modele_unifie": modele_unifie,
+                "generation":    get_generation(modele_unifie, annee),
                 "image":         img,
             })
         except Exception as e:
@@ -500,13 +478,12 @@ def step3_one_page():
             print(f"Extracted {len(cards)} cards")
             if cards:
                 print("Sample:", json.dumps(cards[0], ensure_ascii=False, indent=2))
-            cards = filter_new_records(cards)
             if cards:
                 save_json(cards)
                 save_csv(cards)
                 send_to_supabase(cards)
             else:
-                print("✅ Aucune nouvelle annonce")
+                print("✅ Aucune annonce extraite")
             return cards
         except Exception as e:
             print(f"❌ Error: {e}")
@@ -600,14 +577,12 @@ def full_run(max_pages: int = None):
             browser.close()
 
     print(f"\n📦 Total scraped: {len(all_cards)} records")
-    all_cards = filter_new_records(all_cards)
-    print(f"📦 Nouvelles annonces: {len(all_cards)} records")
     if all_cards:
         save_json(all_cards)
         save_csv(all_cards)
         send_to_supabase(all_cards)
     else:
-        print("✅ Aucune nouvelle annonce à envoyer")
+        print("✅ Aucune annonce à envoyer")
 
 
 # ── ENTRY ──────────────────────────────────────────────────────────────

@@ -121,3 +121,56 @@ def normalize_model(marque, modele):
 
     _log.info("%s | %s | %s", make_display, slug_in, modele)
     return modele
+# ── GENERATION MAPPING ─────────────────────────────────────────────────
+
+_GENERATIONS     = {}
+_GEN_LOADED      = False
+GEN_PATH         = os.path.join(_DIR, "generations.json")
+
+def _load_generations():
+    global _GENERATIONS, _GEN_LOADED
+    if _GEN_LOADED:
+        return
+    if not os.path.exists(GEN_PATH):
+        print("Warning: generations.json not found")
+        _GEN_LOADED = True
+        return
+    with open(GEN_PATH, encoding="utf-8") as f:
+        _GENERATIONS = json.load(f)
+    _GEN_LOADED = True
+
+
+def get_generation(modele_unifie: str, annee) -> str:
+    """
+    Returns the generation label for a given unified model name and year.
+    e.g. get_generation("GOLF", 2015) → "Golf 7"
+    Returns "N/A" if not found.
+    """
+    _load_generations()
+    if not modele_unifie or not _GENERATIONS:
+        return "N/A"
+
+    try:
+        year = int(str(annee).strip()[:4])
+    except (ValueError, TypeError):
+        return "N/A"
+
+    # Try exact key match first
+    key = modele_unifie.upper().strip()
+    gens = _GENERATIONS.get(key)
+
+    # Fallback: slug match
+    if not gens:
+        for k, v in _GENERATIONS.items():
+            if _slug(k) == _slug(key):
+                gens = v
+                break
+
+    if not gens:
+        return "N/A"
+
+    for entry in gens:
+        if entry["from"] <= year <= entry["to"]:
+            return entry["gen"]
+
+    return "N/A"

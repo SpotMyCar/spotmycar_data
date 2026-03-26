@@ -1,6 +1,5 @@
 """
-Aramisauto.com scraper — Playwright + Make.com
-
+Aramisauto.com scraper — Playwright + Supabase
 
 Collecte depuis chaque fiche véhicule :
   - titre, marque, modele, version, finition
@@ -8,7 +7,6 @@ Collecte depuis chaque fiche véhicule :
   - annee, carburant, boite, kilometrage
   - disponibilite, mensualite
   - lien, image
-
 
 Structure de la card (inner_text confirmée) :
   Line  0  → "24 heures"              disponibilite
@@ -27,24 +25,20 @@ Structure de la card (inner_text confirmée) :
   Line 13  → "40 450 €"               prix_origine
   Line 14  → "Économisez 10 451 €..." economie
 
-
 Steps :
   python scraper_aramis.py --step 1   → probe page (sélecteurs, sample)
   python scraper_aramis.py --step 2   → pagination test (5 pages)
-  python scraper_aramis.py --step 3   → une page → CSV + webhook
+  python scraper_aramis.py --step 3   → une page → CSV + Supabase
   python scraper_aramis.py            → full run
   python scraper_aramis.py --pages 10 → full run limité à 10 pages
-
 
 Install :
   pip install playwright playwright-stealth beautifulsoup4
   playwright install chromium
 """
 
-
 import argparse, csv, json, os, re, random, time
-from normalize import normalize_make, normalize_model
-from dedup import filter_new_records
+from normalize import normalize_make, normalize_model, get_generation
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout
 from playwright_stealth import Stealth
 from bs4 import BeautifulSoup
@@ -55,18 +49,15 @@ CONFIG = {
     "start_url":          "https://www.aramisauto.com/achat/",
     "base_url":           "https://www.aramisauto.com",
     "output_dir":         "output_aramis",
-    "max_pages":          100,
+    "max_pages":          10,
     "headless":           True,
     "page_timeout":       60_000,
     "wait_after_load":    3,
     "wait_between_pages": 1,
-    "webhook_url":        "https://hook.eu1.make.com/j7opk3mbec3vmucyygqh2ob2jxx7r0po",
-    "webhook_batch_size": 100,
 }
 
-SUPABASE_URL     = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces"
+SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces"
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-
 
 USER_AGENTS = [
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -151,10 +142,6 @@ def save_csv(data):
 # ── SUPABASE ───────────────────────────────────────────────────────────
 
 def send_to_supabase(records: list):
-    """
-    Envoie les annonces directement à Supabase via l'API REST.
-    Utilise upsert sur lien_annonce pour ignorer les doublons automatiquement.
-    """
     import urllib.request, urllib.error
 
     headers = {
@@ -197,6 +184,7 @@ def send_to_supabase(records: list):
                 "marque":        rec.get("marque",        ""),
                 "modele":        rec.get("modele",        ""),
                 "modele_unifie": rec.get("modele_unifie", ""),
+                "generation": rec.get("generation", "N/A"),
                 "lien_annonce":  rec.get("lien",          ""),
                 "lien_image":    rec.get("image",         ""),
                 "source":        rec.get("source",        ""),
@@ -257,17 +245,6 @@ def _is_annee(s: str) -> bool:
 # ── EXTRACTION ─────────────────────────────────────────────────────────
 
 def extract_cards(page_or_html) -> list:
-    """
-    Extrait toutes les cards depuis une page Playwright ou un HTML brut.
-
-    Aramis a 3 structures de card selon le type :
-      - Neuve sans autonomie  : pas de WLTP, pas de km, "Voiture 0 km"
-      - Electrique/occasion   : lignes WLTP + km insérées après la boite
-      - Variation prix        : prix catalogue et économie absents sur certaines cards
-
-    Les 6 premières lignes (hors "•") sont toujours dans le même ordre.
-    Le reste est lu par contenu (regex) pour éviter les décalages.
-    """
     if isinstance(page_or_html, str):
         soup      = BeautifulSoup(page_or_html, "html.parser")
         cards_raw = []
@@ -307,7 +284,6 @@ def extract_cards(page_or_html) -> list:
             lines = [_clean(ln) for ln in card["text"].splitlines()
                      if _clean(ln) and _clean(ln) != "•"]
 
-            # ── Lien ──────────────────────────────────────────────────
             if href.startswith("http"):
                 lien = href.split("?")[0]
             elif href.startswith("/"):
@@ -315,11 +291,9 @@ def extract_cards(page_or_html) -> list:
             else:
                 lien = "N/A"
 
-            # ── Attributs directs ─────────────────────────────────────
             marque = attrs.get("makerid", "N/A").title()
             modele = attrs.get("modelid", "N/A").upper()
 
-            # ── 6 premières lignes : toujours dans le même ordre ──────
             disponibilite = lines[0] if len(lines) > 0 else "N/A"
             titre         = _clean(f"{lines[1]} {lines[2]}") if len(lines) > 2 else "N/A"
             version       = lines[2] if len(lines) > 2 else "N/A"
@@ -327,7 +301,6 @@ def extract_cards(page_or_html) -> list:
             carburant     = lines[4] if len(lines) > 4 else "N/A"
             boite         = lines[5] if len(lines) > 5 else "N/A"
 
-            # ── Reste : lu par contenu ────────────────────────────────
             annee       = "N/A"
             kilometrage = "N/A"
             autonomie   = "N/A"
@@ -354,6 +327,8 @@ def extract_cards(page_or_html) -> list:
             prix         = prix_list[0] if len(prix_list) >= 1 else "N/A"
             prix_origine = prix_list[1] if len(prix_list) >= 2 else "N/A"
 
+            modele_unifie = normalize_model(marque, modele)
+
             results.append({
                 "titre":         titre,
                 "marque":        marque,
@@ -372,7 +347,8 @@ def extract_cards(page_or_html) -> list:
                 "disponibilite": disponibilite,
                 "source":        "aramisauto",
                 "lien":          lien,
-                "modele_unifie": normalize_model(marque, modele),
+                "modele_unifie": modele_unifie,
+                "generation":    get_generation(modele_unifie, annee),
                 "image":         img,
             })
         except Exception as e:
@@ -472,7 +448,6 @@ def step3_one_page():
             print(f"Extraites : {len(cards)} cards")
             if cards:
                 print("Sample :", json.dumps(cards[0], ensure_ascii=False, indent=2))
-            cards = filter_new_records(cards)
             if cards:
                 save_json(cards)
                 save_csv(cards)
@@ -537,8 +512,6 @@ def full_run(max_pages: int = None):
             browser.close()
 
     print(f"\n📦 Total scraped : {len(all_cards)} annonces")
-    all_cards = filter_new_records(all_cards)
-    print(f"📦 Nouvelles annonces : {len(all_cards)}")
     if all_cards:
         save_json(all_cards)
         save_csv(all_cards)
