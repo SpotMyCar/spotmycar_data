@@ -148,7 +148,7 @@ def send_to_supabase(records: list):
         "Content-Type":  "application/json",
         "apikey":        SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Prefer":        "resolution=ignore-duplicates",
+        "Prefer": "resolution=merge-duplicates",
     }
 
     batch_size    = 100
