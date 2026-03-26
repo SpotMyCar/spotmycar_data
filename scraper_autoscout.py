@@ -47,7 +47,7 @@ CONFIG = {
     "webhook_batch_size": 100,
 }
 
-SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces"
+SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces?on_conflict=lien_annonce"
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 USER_AGENTS = [
