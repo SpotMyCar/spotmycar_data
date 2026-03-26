@@ -38,7 +38,7 @@ CONFIG = {
     "proxy_username":     "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
     "proxy_password":     "bpKGpmIg89DtkfQO",
     "output_dir":         "output_autoscout",
-    "max_pages":          10,
+    "max_pages":          200,
     "headless":           True,
     "page_timeout":       60_000,
     "wait_after_load":    2,
