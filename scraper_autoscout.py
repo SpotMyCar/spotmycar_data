@@ -576,13 +576,22 @@ def full_run(max_pages: int = None):
         finally:
             browser.close()
 
-    print(f"\n📦 Total scraped: {len(all_cards)} records")
-    if all_cards:
-        save_json(all_cards)
-        save_csv(all_cards)
-        send_to_supabase(all_cards)
+    print(f"\n📦 Total scraped : {len(all_cards)} annonces")
+    seen = set()
+    unique_cards = []
+    for card in all_cards:
+        lien = card.get("lien", "")
+        if lien and lien not in seen:
+            seen.add(lien)
+            unique_cards.append(card)
+    print(f"📦 After dedup: {len(unique_cards)} unique records")
+    if unique_cards:
+        save_json(unique_cards)
+        save_csv(unique_cards)
+        send_to_supabase(unique_cards)
     else:
         print("✅ Aucune annonce à envoyer")
+
 
 
 # ── ENTRY ──────────────────────────────────────────────────────────────
