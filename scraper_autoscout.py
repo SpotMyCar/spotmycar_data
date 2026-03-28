@@ -21,6 +21,7 @@ Install:
 """
 
 import argparse, csv, json, os, re, random, time
+from datetime import datetime
 from normalize import normalize_make, normalize_model, get_generation
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PWTimeout
 from playwright_stealth import Stealth
@@ -187,6 +188,7 @@ def send_to_supabase(records: list):
                 "lien_annonce":  rec.get("lien",          ""),
                 "lien_image":    rec.get("image",         ""),
                 "source":        rec.get("source",        ""),
+                "last_seen_at":  datetime.utcnow().isoformat(),  
             })
 
         payload = json.dumps(rows, ensure_ascii=False).encode("utf-8")
