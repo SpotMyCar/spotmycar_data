@@ -39,3 +39,9 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python scraper_aramis.py
         continue-on-error: true
+
+      - name: Delete stale listings
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python cleanup.py
+        continue-on-error: true
