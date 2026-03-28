@@ -57,7 +57,7 @@ CONFIG = {
     "wait_between_pages": 1,
 }
 
-SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces?on_conflict=lien_annonce"
+SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces?on_conflict=marque,modele,prix,kilometrage,lien_image"
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 USER_AGENTS = [
