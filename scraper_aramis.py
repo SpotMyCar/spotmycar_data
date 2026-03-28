@@ -50,7 +50,7 @@ CONFIG = {
     "start_url":          "https://www.aramisauto.com/achat/",
     "base_url":           "https://www.aramisauto.com",
     "output_dir":         "output_aramis",
-    "max_pages":          150,
+    "max_pages":          50,
     "headless":           True,
     "page_timeout":       60_000,
     "wait_after_load":    3,
