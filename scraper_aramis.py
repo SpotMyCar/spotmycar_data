@@ -57,7 +57,7 @@ CONFIG = {
     "wait_between_pages": 1,
 }
 
-SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces?on_conflict=marque,modele,prix,kilometrage,lien_image"
+SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co/rest/v1/annonces"
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 USER_AGENTS = [
@@ -194,7 +194,7 @@ def send_to_supabase(records: list):
 
         payload = json.dumps(rows, ensure_ascii=False).encode("utf-8")
         try:
-            req = urllib.request.Request(SUPABASE_URL, data=payload, headers=headers, method="POST")
+            req = urllib.request.Request(SUPABASE_URL + "?on_conflict=lien_annonce", data=payload, headers=headers, method="POST")
             with urllib.request.urlopen(req, timeout=30) as resp:
                 status = resp.status
             sent += len(batch)
