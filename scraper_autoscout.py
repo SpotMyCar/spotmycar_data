@@ -32,8 +32,19 @@ from bs4 import BeautifulSoup
 CONFIG = {
     "start_url": (
         "https://www.autoscout24.fr/lst"
-        "?sort=age&desc=1&ustate=N%2CU&size=40&page=1&cy=F&atype=C"
+        "?atype=C"
+        "&cy=F"
+        "&damaged_listing=exclude"
+        "&desc=0"
+        "&lat=43.70343"
+        "&lon=7.26627"
+        "&powertype=kw"
+        "&sort=standard"
+        "&ustate=N%2CU"
+        "&zip=Nice%20%28Alpes-Maritimes%29"
+        "&zipr=300"
     ),
+
     "proxy_host":         "proxy.smartproxy.net",
     "proxy_port":         3120,
     "proxy_username":     "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
