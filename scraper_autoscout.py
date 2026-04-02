@@ -151,6 +151,7 @@ def save_csv(data):
 
 
 # ── SUPABASE ───────────────────────────────────────────────────────────
+
 def send_to_supabase(records: list):
     import urllib.request, urllib.error
 
@@ -194,12 +195,11 @@ def send_to_supabase(records: list):
                 "marque":        rec.get("marque",        ""),
                 "modele":        rec.get("modele",        ""),
                 "modele_unifie": rec.get("modele_unifie", ""),
-                "generation":    rec.get("generation",    "N/A"),
+                "generation": rec.get("generation", "N/A"),
                 "lien_annonce":  rec.get("lien",          ""),
                 "lien_image":    rec.get("image",         ""),
                 "source":        rec.get("source",        ""),
-                "last_seen_at":  datetime.utcnow().isoformat(),
-                "carburant":     rec.get("carburant",     ""),
+                "last_seen_at":  datetime.utcnow().isoformat(),  
             })
 
         payload = json.dumps(rows, ensure_ascii=False).encode("utf-8")
@@ -223,6 +223,7 @@ def send_to_supabase(records: list):
 
 
 # ── HELPERS ────────────────────────────────────────────────────────────
+
 def _clean(s: str) -> str:
     return " ".join(s.split()).strip()
 
@@ -273,37 +274,13 @@ def _extract_from_jsonld(soup) -> list:
     return results
 
 
-# ── FUEL PARSING ───────────────────────────────────────────────────────
-# ✅ MODIFIÉ : gère les codes simples ET les codes multi-carburant AutoScout
-def parse_fuel(code: str) -> str:
-    MULTI = {
-        "b2": "Hybride (Essence)",
-        "b3": "Hybride rechargeable (Essence)",
-        "d2": "Hybride (Diesel)",
-        "d3": "Hybride rechargeable (Diesel)",
-        "e2": "Hybride (Électrique)",
-    }
-    SINGLE = {
-        "b": "Essence",
-        "d": "Diesel",
-        "e": "Électrique",
-        "h": "Hybride",
-        "m": "Mild-Hybrid",
-        "l": "GPL",
-        "g": "GNV",
-        "2": "Hybride",
-        "3": "Hybride rechargeable",
-    }
-    if not code:
-        return "N/A"
-    c = code.strip().lower()
-    if c in MULTI:
-        return MULTI[c]
-    return SINGLE.get(c[0], c.capitalize())
-
-
 # ── EXTRACTION ─────────────────────────────────────────────────────────
+
 def extract_cards(page_or_html, html: str = None) -> list:
+    FUEL_MAP = {
+        "b": "Essence", "d": "Diesel", "e": "Électrique",
+        "h": "Hybride", "l": "GPL",    "g": "GNV", "m": "Mild-Hybrid",
+    }
 
     if isinstance(page_or_html, str):
         html      = page_or_html
@@ -362,13 +339,8 @@ def extract_cards(page_or_html, html: str = None) -> list:
             def get(idx):
                 return lines[idx] if idx < len(lines) else "N/A"
 
-            guid      = attrs.get("data-guid", attrs.get("id", ""))
-            href      = card.get("href", "")
-            fuel_code = attrs.get("data-fuel-type", "")
-
-            # ✅ MODIFIÉ : utilise parse_fuel au lieu de FUEL_MAP
-            carburant = parse_fuel(fuel_code)
-
+            guid = attrs.get("data-guid", attrs.get("id", ""))
+            href = card.get("href", "")
             if href.startswith("http"):
                 lien = href.split("?")[0]
             elif href.startswith("/offres/"):
@@ -376,8 +348,7 @@ def extract_cards(page_or_html, html: str = None) -> list:
             elif guid:
                 make_slug  = attrs.get("data-make",  "").lower().replace(" ", "-")
                 model_slug = attrs.get("data-model", "").lower().replace(" ", "-")
-                # ✅ MODIFIÉ : fuel_slug basé sur le premier caractère du code pour l'URL
-                fuel_slug  = parse_fuel(fuel_code[:1] if fuel_code else "").lower()
+                fuel_slug  = FUEL_MAP.get(attrs.get("data-fuel-type", ""), "").lower()
                 slug = "-".join(filter(None, [make_slug, model_slug, fuel_slug]))
                 lien = f"https://www.autoscout24.fr/offres/{slug}-{guid}"
             else:
@@ -400,6 +371,9 @@ def extract_cards(page_or_html, html: str = None) -> list:
             else:
                 date_mec = "N/A"
                 annee    = "N/A"
+
+            fuel_code = attrs.get("data-fuel-type", "")
+            carburant = FUEL_MAP.get(fuel_code, fuel_code.capitalize() if fuel_code else "N/A")
 
             titre        = _clean(f"{get(0)} {get(1)}")
             version      = get(1)
@@ -442,6 +416,7 @@ def get_next_page_url(current_url: str, page_num: int) -> str:
 
 
 # ── STEPS ──────────────────────────────────────────────────────────────
+
 def step1_check_proxy():
     print("\n━━━ STEP 1: Proxy check ━━━")
     with sync_playwright() as pw:
@@ -564,6 +539,7 @@ def step4_pagination():
 
 
 # ── FULL RUN ───────────────────────────────────────────────────────────
+
 def full_run(max_pages: int = None):
     limit     = max_pages or CONFIG["max_pages"]
     print(f"\n━━━ FULL RUN — max {limit} pages (~{limit * 40:,} records max) ━━━")
@@ -628,6 +604,7 @@ def full_run(max_pages: int = None):
         send_to_supabase(unique_cards)
     else:
         print("✅ Aucune annonce à envoyer")
+
 
 
 # ── ENTRY ──────────────────────────────────────────────────────────────
