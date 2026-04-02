@@ -196,6 +196,7 @@ def send_to_supabase(records: list):
                 "modele":        rec.get("modele",        ""),
                 "modele_unifie": rec.get("modele_unifie", ""),
                 "generation": rec.get("generation", "N/A"),
+                "carburant": rec.get("carburant", ""),
                 "lien_annonce":  rec.get("lien",          ""),
                 "lien_image":    rec.get("image",         ""),
                 "source":        rec.get("source",        ""),
@@ -277,10 +278,30 @@ def _extract_from_jsonld(soup) -> list:
 # ── EXTRACTION ─────────────────────────────────────────────────────────
 
 def extract_cards(page_or_html, html: str = None) -> list:
-    FUEL_MAP = {
-        "b": "Essence", "d": "Diesel", "e": "Électrique",
-        "h": "Hybride", "l": "GPL",    "g": "GNV", "m": "Mild-Hybrid",
-    }
+    def parse_fuel(code: str) -> str:
+        if not code:
+            return "N/A"
+        c = code.strip().lower()
+        MULTI = {
+            "b2": "Hybride (Essence)",
+            "b3": "Hybride rechargeable (Essence)",
+            "d2": "Hybride (Diesel)",
+            "d3": "Hybride rechargeable (Diesel)",
+            "e2": "Hybride (Électrique)",
+            "e3": "Hybride rechargeable (Électrique)",
+        }
+        SINGLE = {
+            "b": "Essence", "d": "Diesel", "e": "Électrique",
+            "h": "Hybride", "m": "Mild-Hybrid", "l": "GPL", "g": "GNV",
+            "2": "Hybride", "3": "Hybride rechargeable",
+        }
+        if c in MULTI:
+            return MULTI[c]
+        if c and c[0] in SINGLE:
+            return SINGLE[c[0]]
+        return code.capitalize()
+
+    FUEL_MAP = {}  # conservé pour le slug dans la construction du lien
 
     if isinstance(page_or_html, str):
         html      = page_or_html
@@ -373,7 +394,7 @@ def extract_cards(page_or_html, html: str = None) -> list:
                 annee    = "N/A"
 
             fuel_code = attrs.get("data-fuel-type", "")
-            carburant = FUEL_MAP.get(fuel_code, fuel_code.capitalize() if fuel_code else "N/A")
+            carburant = parse_fuel(fuel_code)
 
             titre        = _clean(f"{get(0)} {get(1)}")
             version      = get(1)

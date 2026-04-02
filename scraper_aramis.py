@@ -186,11 +186,11 @@ def send_to_supabase(records: list):
                 "modele":        rec.get("modele",        ""),
                 "modele_unifie": rec.get("modele_unifie", ""),
                 "generation": rec.get("generation", "N/A"),
+                "carburant": rec.get("carburant", ""),
                 "lien_annonce":  rec.get("lien",          ""),
                 "lien_image":    rec.get("image",         ""),
                 "source":        rec.get("source",        ""),
                 "last_seen_at":  datetime.utcnow().isoformat(),  # add this
-                "carburant": rec.get("carburant", ""),
             })
 
         payload = json.dumps(rows, ensure_ascii=False).encode("utf-8")
