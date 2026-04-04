@@ -66,7 +66,13 @@
     "X7",
     "XM",
     "Z3",
-    "Z4"
+    "Z4",
+    "118",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M8"
   ],
   "Citroën": [
     "C3",
@@ -708,7 +714,9 @@
     "MINI",
     "COUNTRYMAN",
     "MINI CLUBMAN",
-    "PACEMAN"
+    "PACEMAN",
+    "One",
+    "John Cooper Works"
   ],
   "Mitsubishi": [
     "PAJERO",
@@ -929,5 +937,19 @@
     "V90",
     "V90 CROSS COUNTRY",
     "XC70"
+  ],
+  "Xpeng": [
+    "G3",
+    "G6",
+    "G9",
+    "P5",
+    "P7"
+  ],
+  "GMC": [
+    "Sierra",
+    "Canyon",
+    "Yukon",
+    "Terrain",
+    "Acadia"
   ]
 }
