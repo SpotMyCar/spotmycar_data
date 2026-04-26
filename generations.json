@@ -2030,6 +2030,11 @@
       "gen": "Avenger 2",
       "from": 2007,
       "to": 2014
+    },
+    {
+      "gen": "Avenger 3",
+      "from": 2022,
+      "to": 9999
     }
   ],
   "CALIBER": [
@@ -2663,17 +2668,17 @@
   ],
   "MUSTANG": [
     {
-      "gen": "Mustang 5",
+      "gen": "Mustang S197",
       "from": 2004,
       "to": 2014
     },
     {
-      "gen": "Mustang 6",
+      "gen": "Mustang S550",
       "from": 2014,
       "to": 2023
     },
     {
-      "gen": "Mustang 7",
+      "gen": "Mustang S650",
       "from": 2023,
       "to": 9999
     }
@@ -3316,11 +3321,6 @@
   ],
   "TUCSON": [
     {
-      "gen": "Tucson 1",
-      "from": 2004,
-      "to": 2009
-    },
-    {
       "gen": "Tucson 2",
       "from": 2009,
       "to": 2015
@@ -3428,13 +3428,8 @@
   ],
   "D-MAX": [
     {
-      "gen": "D-Max 1",
-      "from": 2002,
-      "to": 2012
-    },
-    {
       "gen": "D-Max 2",
-      "from": 2012,
+      "from": 2011,
       "to": 2020
     },
     {
@@ -3618,8 +3613,8 @@
   ],
   "GLADIATOR": [
     {
-      "gen": "Gladiator 1",
-      "from": 2018,
+      "gen": "Gladiator JT",
+      "from": 2019,
       "to": 9999
     }
   ],
@@ -3917,6 +3912,11 @@
     {
       "gen": "Stonic 1",
       "from": 2017,
+      "to": 2023
+    },
+    {
+      "gen": "Stonic 2",
+      "from": 2023,
       "to": 9999
     }
   ],
@@ -8058,11 +8058,6 @@
   ],
   "MULTIVAN": [
     {
-      "gen": "Multivan T5",
-      "from": 2003,
-      "to": 2015
-    },
-    {
       "gen": "Multivan T6",
       "from": 2015,
       "to": 2021
@@ -8550,41 +8545,36 @@
   ],
   "SIERRA": [
     {
-      "gen": "Sierra 1500 4",
-      "from": 2014,
-      "to": 2018
+      "gen": "Sierra 4",
+      "from": 2013,
+      "to": 2023
     },
     {
-      "gen": "Sierra 1500 5",
-      "from": 2018,
-      "to": 2030
+      "gen": "Sierra 5",
+      "from": 2023,
+      "to": 9999
     }
   ],
   "RAM": [
     {
-      "gen": "RAM 1500 4",
+      "gen": "RAM 1500 DS",
       "from": 2009,
       "to": 2018
     },
     {
-      "gen": "RAM 1500 5",
+      "gen": "RAM 1500 DT",
       "from": 2018,
-      "to": 2030
+      "to": 9999
     }
   ],
   "BRONCO": [
     {
-      "gen": "Bronco 6",
+      "gen": "Bronco 6G",
       "from": 2021,
-      "to": 2030
+      "to": 9999
     }
   ],
   "TACOMA": [
-    {
-      "gen": "Tacoma 2",
-      "from": 2005,
-      "to": 2015
-    },
     {
       "gen": "Tacoma 3",
       "from": 2015,
@@ -8593,45 +8583,59 @@
     {
       "gen": "Tacoma 4",
       "from": 2023,
-      "to": 2030
+      "to": 9999
     }
   ],
   "SILVERADO": [
     {
       "gen": "Silverado 4",
-      "from": 2014,
+      "from": 2013,
       "to": 2018
     },
     {
       "gen": "Silverado 5",
       "from": 2018,
-      "to": 2030
+      "to": 9999
     }
   ],
   "CANYON": [
     {
       "gen": "Canyon 2",
-      "from": 2015,
+      "from": 2014,
       "to": 2022
     },
     {
       "gen": "Canyon 3",
       "from": 2022,
-      "to": 2030
+      "to": 9999
     }
   ],
   "SYMBIOZ": [
     {
       "gen": "Symbioz 1",
-      "from": 2023,
-      "to": 2030
+      "from": 2024,
+      "to": 9999
     }
   ],
   "DURANGO": [
     {
-      "gen": "Durango 3",
+      "gen": "Durango WD",
       "from": 2011,
-      "to": 2030
+      "to": 9999
+    }
+  ],
+  "JUNIOR": [
+    {
+      "gen": "Junior 1",
+      "from": 2024,
+      "to": 9999
+    }
+  ],
+  "COOPER E": [
+    {
+      "gen": "Cooper E F56",
+      "from": 2021,
+      "to": 9999
     }
   ]
 }
