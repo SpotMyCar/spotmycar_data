@@ -200,7 +200,7 @@ def send_to_supabase(records: list):
                 "lien_annonce":  rec.get("lien",          ""),
                 "lien_image":    rec.get("image",         ""),
                 "source":        rec.get("source",        ""),
-                "last_seen_at":  datetime.utcnow().isoformat(),  
+                "last_seen_at": datetime.utcnow().isoformat() + "Z", 
             })
 
         payload = json.dumps(rows, ensure_ascii=False).encode("utf-8")
