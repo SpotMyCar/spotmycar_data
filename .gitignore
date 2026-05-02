@@ -1,2 +1,12 @@
 output_autoscout/
 output_aramis/
+
+# Secrets
+.env
+
+# Données locales (non versionnées)
+scripts/data/*.json
+
+# Dépendances Node
+node_modules/
+package-lock.json
