@@ -1,0 +1,113 @@
+
+🔍 checkexpired.py [🧪 DRY-RUN]
+   Batch  : 100 annonces
+   Source : autoscout24 + aramisauto
+─────────────────────────────────────────────────────────────────
+📋 100 annonces récupérées
+
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ffres/jeep-compass-ac200b77-26a8-4d92-ab6e-0d6749db2038
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …/offres/subaru-wrx-c5402b97-8d4f-4149-bed3-65498cbdbe21
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …r/offres/ford-kuga-d554ee77-2b7f-46b8-bb83-af320c4cbb16
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …es/porsche-boxster-0fe8b8a6-a254-49d9-81f0-a84ad3b1eb33
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …4.fr/offres/bmw-x3-60856cd1-69ec-4987-9f68-656ea3630a25
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …ffres/mini-unknown-d5d3afd4-5f86-4b78-81ca-ddb7b9620208
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/porsche-911-8815fa4a-66bb-4bff-b835-666b9f1d285e
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …es/audi-a6-allroad-0981584c-b38d-4ebc-a1d7-73099012eec0
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …uzuki-grand-vitara-425af297-5122-4e0e-bdd3-16c11299c34b
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …rcedes-benz-ml-250-2aa9c603-5f40-4652-ad1e-62d330291e6e
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fr/offres/bmw-2002-316f582d-79b4-4181-a735-3c1e23a0fb3d
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …cedes-benz-glc-350-def83866-259f-409d-8fd2-fc4ba5ef3e9c
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …fr/offres/fiat-500-fd3e549b-9eaf-49d4-a094-9823d01486d2
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …/offres/audi-rs-q3-6d2e959e-95e7-488c-8f5e-7da08ff9822b
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …and-rover-defender-0d3da3ef-0171-470c-8b53-adb4036a3fc4
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …/volkswagen-arteon-e3dd9d33-ce69-4e71-8802-854b2ea03f94
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …-range-rover-sport-2b25912b-a0f0-4758-884f-57066f41a2f1
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          ….fr/offres/audi-a1-83d4ec64-8a05-4fc0-a3af-8cc970537a80
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …-range-rover-sport-204f1255-c748-4ccd-96c5-65fd9d4bec8c
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fres/dacia-sandero-7dcee7bb-e206-4879-b1cb-c683fd6fb628
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          ….fr/offres/bmw-114-97be568f-2bd0-4b23-8519-8e15b1cb7e3e
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/ferrari-250-67871c83-fe85-4639-8a9b-2d24644f3d29
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …fres/porsche-macan-06225efa-3ff5-4a3c-b364-71e37ac8e603
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          ….fr/offres/kia-rio-66420da8-bee0-4a56-9449-112906fe7ffb
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …cedes-benz-gla-220-e33a939a-db2d-4c23-a1f6-b8f5f2f047cd
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …es/maserati-ghibli-078da063-4b76-4bf1-ac16-4b17985ac6ac
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …fr/offres/audi-sq7-6a46c86f-0249-4c81-9fb9-8b6f38336553
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …4.fr/offres/bmw-x3-48318d0c-7e74-4e63-a631-1ae1488ce746
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/porsche-911-1eb34a32-8ff1-4ef1-90bc-de83cac1e5fb
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …ercedes-benz-b-180-89370c5a-7925-49d2-b99d-babd6b2f2e78
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …res/renault-scenic-aab31dce-2370-4d04-9709-4959f07679e5
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …res/renault-captur-7876fe56-4dae-4320-863f-e0f318b23b41
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …es/renault-symbioz-e03d1af4-d99b-4a5e-ba55-766e3f7bb2a4
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …ffres/toyota-yaris-fe943a64-d85c-4a16-91e2-de0adf8781a1
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/porsche-997-6dbddb36-3773-42c9-b667-0b2a9a4615a4
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ffres/toyota-yaris-db2c35b8-58d6-4686-8416-58b6e4c54644
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …es/volkswagen-polo-3208edff-b4be-494a-88b8-7fc987c2bcce
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …tsubishi-outlander-7e598607-03d5-4d5c-921e-fe0b4f27e471
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …volkswagen-t-cross-2865ca9c-8d23-4796-93fc-e8e927e73c45
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …-range-rover-sport-1a275d1e-6a47-4b50-83ab-402f5bd9b93f
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …r/offres/volvo-s60-1329eb1c-3461-44f1-9d9e-e5c1dbbebd79
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …/offres/citroen-c1-45383bc1-1b84-4695-b922-1d663b6988ec
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fr/offres/fiat-500-667ba23f-2c23-40f9-bce6-5475d4904e90
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …r/offres/opel-adam-df1435a1-2def-46cd-a9fc-32f3d03453bd
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …volkswagen-t-cross-5ff9aae0-7bbb-4f98-8a44-c1702f447bec
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/ford-ranger-d3034ba7-39e7-417c-9d40-81384e116718
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …/offres/citroen-c3-e76701b6-da5f-453b-bdd8-a7ee917a5adc
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …res/porsche-taycan-3cfc7485-ad9d-4247-b57f-223b71a790e8
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          ….fr/offres/audi-q2-e9869b15-2fd4-4b69-b1aa-6eb05b0f6c07
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …4.fr/offres/bmw-x3-a055142c-4ba4-479e-a1e7-9da0270fdcd8
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ercedes-benz-c-300-73cff8a5-c7c2-4711-8509-05677347e238
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …er-discovery-sport-6d7f2954-427c-47b3-9343-c5e8b0e4d5ef
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …s/cadillac-deville-fcc67a17-c8c4-4fbc-86bd-2b99bc079522
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …ffres/peugeot-2008-bc4f6a82-f4aa-4a24-ae12-b7d83eacfbe0
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/porsche-911-06e86df9-9ce1-4514-9c5b-367f68d22115
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ffres/toyota-yaris-effa6316-b937-4e50-8e11-960236f66721
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …offres/porsche-993-904cdabe-9e2f-4aca-95e0-f2c1160b0efe
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fres/porsche-macan-c1158af0-d7a2-4173-917d-e964cc99442c
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ini-cooper-clubman-0b284977-5110-4d12-a3d1-e7bae1501a09
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ffres/renault-clio-ccf0bdaa-2e76-45ba-9e6c-02ccd938e8d7
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …fres/dacia-sandero-8dde03e8-e402-443c-86d2-a86cffe6cc13
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …4.fr/offres/bmw-z8-a006a262-9d9d-4836-a367-0f1a63fbc548
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/porsche-997-eacbd68c-b17c-47e5-9427-998e1f4446dd
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          ….fr/offres/audi-q2-44e77fd0-6d7d-4f34-b28f-e5dd25a739d5
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …-range-rover-sport-884db603-36fe-4e26-94c1-9540eeafe0e3
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …offres/nissan-juke-5bb75637-6746-44f4-9f79-112825c31fde
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/peugeot-208-e260b3e1-5191-4f22-86fc-8e1c63a5a09d
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …offres/ferrari-f12-c0386732-9a9d-4167-b15d-c06e1ad6af8a
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ffres/peugeot-3008-783e283e-16bd-4203-98db-56bba49bd32e
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/suzuki-alto-a90fa23e-b50e-41d4-aba9-ccfc799ea3e7
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ffres/hyundai-ix35-5a03bc54-a7ba-491a-b8e6-4cc58861d8f0
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ffres/renault-clio-90635d5e-61a6-4f97-a075-38de17d68234
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fres/jeep-wrangler-d2c37284-03ea-4512-a013-53cfddb68341
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …range-rover-evoque-488c5231-97b0-4eae-bd63-1eb31d465b32
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fres/renault-modus-f37b7ca9-3dca-4ded-b4de-f93a21165ba7
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …res/renault-arkana-6dbe1c7c-e206-41c2-9505-c2542b8f9623
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/skoda-karoq-fe859a7a-c4dd-44b8-9664-9c14eb09748b
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …offres/hyundai-i20-abfffe7d-2cea-40b9-97d2-661b2fc3153f
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/mazda-cx-30-4ca265aa-e7d7-47bd-8829-066fe29f42fc
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …edes-benz-c-63-amg-088bb511-fa39-424a-b848-d21a450f3d81
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          ….fr/offres/bmw-420-c7944be7-5dc1-4df9-ab96-f7869e4b7a60
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ercedes-benz-e-300-f8f176f5-7d9f-4810-91fc-be78dbdd1fba
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …res/renault-trafic-05ad73a9-0a1a-484a-935f-473eababf96d
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …ley-continental-gt-23ad13f9-d1f2-47a4-abba-d18051c42842
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …offres/nissan-juke-f3a0e8db-d42a-467a-b260-57c589159c6d
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fres/jaguar-e-type-c5d35a13-e9d8-472d-ba0a-3b530c95d45e
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …res/porsche-cayman-212765f0-e868-4054-b044-770208756170
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …/offres/seat-arona-aba444be-613d-4ce3-9270-2572e2322d11
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …4.fr/offres/bmw-z4-a5cc9fd8-e1af-4281-a3f7-9735e4762677
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fr/offres/audi-rs4-8b804806-1502-435b-9ca6-19572737e70e
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …porsche-718-spyder-a7479c42-2088-48b8-8ddf-c7c93e671009
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          ….fr/offres/bmw-550-6e1b575e-992a-45fe-af16-e5200ab61e11
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …fr/offres/audi-rs3-8dc9b2c3-516f-4f24-8328-f1d2eeb5f88c
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …ffres/peugeot-2008-510d63b7-b68a-4c9e-9e58-990957372b20
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          …es/porsche-cayenne-fc12274f-40a7-4c12-822b-497b49e90f88
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …-range-rover-sport-b83f77dc-b9ad-443e-8df1-ae88e1951520
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …lamborghini-diablo-6d8ba166-2619-4289-843e-7c7be3dd0432
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …4.fr/offres/bmw-x3-6e9cb9ff-ae35-4569-8809-c4f432ae540b
+  [autoscout24 ] 🔴 EXPIRÉ  — texte expiration détecté (dry-run)          …ercedes-benz-a-180-dfd82e9d-5166-42c7-8c3f-4f205e278cdf
+  [autoscout24 ] 🔴 EXPIRÉ  — HTTP 410 (dry-run)                          ….fr/offres/audi-r8-46e560f0-3de7-4ec6-ab95-3cb1a1966d92
+
+─────────────────────────────────────────────────────────────────
+📊 Résultats finaux :
+   ✅ Vérifiées  : 100
+   🔴 Expirées   : 100 (non flaguées — dry-run)
+   ⚠️  Erreurs    : 0
