@@ -309,6 +309,7 @@ for item in raw:
             'lien_image':    item.get('absolute src'),
             'source':        'LeBonCoin',
             'carburant':     carburant,
+            'is_active':     True,
         })
 
 print(f"{len(annonces)} annonces valides sur {len(raw)} entrées")

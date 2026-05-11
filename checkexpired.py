@@ -47,7 +47,7 @@ def fetch_annonces(batch: int, source: str = None) -> list:
 
     params = {
         "select": "id,lien_annonce,source,last_seen_at",
-        "is_expired": "eq.false",
+        "is_active": "eq.true",
         "last_seen_at": f"gt.{since}",
         "order": "last_seen_at.asc",
         "limit": str(batch),
@@ -66,9 +66,9 @@ def fetch_annonces(batch: int, source: str = None) -> list:
 
 
 def flag_expired(annonce_id: int) -> bool:
-    """Met is_expired = true pour une annonce dans Supabase."""
+    """Met is_active = false pour une annonce dans Supabase."""
     url     = f"{SUPABASE_URL}?id=eq.{annonce_id}"
-    payload = json.dumps({"is_expired": True}).encode("utf-8")
+    payload = json.dumps({"is_active": False}).encode("utf-8")
     headers = {**HEADERS_SUPABASE, "Prefer": "return=minimal"}
 
     req = urllib.request.Request(url, data=payload, headers=headers, method="PATCH")
@@ -84,7 +84,7 @@ def normalize_url(url: str) -> str:
 def check_url(lien: str, source: str) -> tuple[bool, str]:
     """
     Vérifie si une URL est expirée.
-    Retourne (is_expired: bool, reason: str)
+    Retourne (is_unavailable: bool, reason: str)
     """
     try:
         req = urllib.request.Request(lien, headers=HEADERS_HTTP)
