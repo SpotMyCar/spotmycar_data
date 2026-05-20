@@ -1,26 +1,26 @@
 {
   "bmw": {
-    "4er": "Série 4",
-    "435": "Série 4",
-    "420": "Série 4",
-    "3er": "Série 3",
-    "320": "Série 3",
-    "1er": "Série 1",
-    "118": "Série 1"
+    "4er": "SERIE 4",
+    "435": "SERIE 4",
+    "420": "SERIE 4",
+    "3er": "SERIE 3",
+    "320": "SERIE 3",
+    "1er": "SERIE 1",
+    "118": "SERIE 1"
   },
   "mercedes-benz": {
     "glc300": "GLC",
-    "c200": "Classe C",
-    "a200": "Classe A",
-    "e200": "Classe E"
+    "c200": "CLASSE C",
+    "a200": "CLASSE A",
+    "e200": "CLASSE E"
   },
   "volkswagen": {
-    "golf viii": "Golf",
-    "golf 8": "Golf",
-    "polo vi": "Polo"
+    "golf viii": "GOLF",
+    "golf 8": "GOLF",
+    "polo vi": "POLO"
   },
   "opel": {
-    "corsa-e": "Corsa",
-    "corsa f": "Corsa"
+    "corsa-e": "CORSA",
+    "corsa f": "CORSA"
   }
 }
