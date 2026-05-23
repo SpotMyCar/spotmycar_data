@@ -297,12 +297,28 @@ def extract_cards(page_or_html) -> list:
             marque = attrs.get("makerid", "N/A").title()
             modele = attrs.get("modelid", "N/A").upper()
 
+            CARBURANTS = {
+                "essence", "diesel", "hybride", "électrique", "electrique",
+                "gpl", "gnv", "éthanol", "ethanol", "mild-hybrid", "hydrogène"
+            }
+            BOITES = {"auto.", "automatique", "manuelle", "man.", "bva", "bvm", "dsg", "cvt"}
+
             disponibilite = lines[0] if len(lines) > 0 else "N/A"
             titre         = _clean(f"{lines[1]} {lines[2]}") if len(lines) > 2 else "N/A"
             version       = lines[2] if len(lines) > 2 else "N/A"
-            finition      = lines[3] if len(lines) > 3 else "N/A"
-            carburant     = lines[4] if len(lines) > 4 else "N/A"
-            boite         = lines[5] if len(lines) > 5 else "N/A"
+
+            finition  = "N/A"
+            carburant = "N/A"
+            boite     = "N/A"
+
+            for ln in lines[3:8]:  # cherche dans les 5 prochaines lignes
+                ln_low = ln.lower()
+                if carburant == "N/A" and any(c in ln_low for c in CARBURANTS):
+                    carburant = ln
+                elif boite == "N/A" and any(b in ln_low for b in BOITES):
+                    boite = ln
+                elif finition == "N/A" and carburant == "N/A" and boite == "N/A":
+                    finition = ln  # première ligne non reconnue = finition
 
             annee       = "N/A"
             kilometrage = "N/A"
