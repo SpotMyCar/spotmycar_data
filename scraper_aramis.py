@@ -319,7 +319,8 @@ def extract_cards(page_or_html) -> list:
                     boite = ln
                 elif finition == "N/A" and carburant == "N/A" and boite == "N/A":
                     finition = ln  # première ligne non reconnue = finition
-
+            if carburant != "N/A" and (carburant in ("O", "Unknown") or len(carburant) <= 2):
+                carburant = "N/A"
             annee       = "N/A"
             kilometrage = "N/A"
             autonomie   = "N/A"
