@@ -79,6 +79,13 @@ def normalize_make(marque):
         "mg mg motor":   "MG/MG Motor",
         "bmw":           "BMW",
         "ds automobiles":"DS",
+        "alfa-romeo":    "Alfa Romeo",
+        "citroen":       "Citroën",
+        "citroen":       "Citroën",
+        "ds automobiles":"DS",
+        "ds":            "DS",
+        "mercedes":      "Mercedes-Benz",
+        "mg":            "MG",
     }
     if slug_in in ALIASES and ALIASES[slug_in] in _DB:
         return ALIASES[slug_in]
