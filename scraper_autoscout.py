@@ -47,8 +47,8 @@ CONFIG = {
 
     "proxy_host":         "proxy.smartproxy.net",
     "proxy_port":         3120,
-    "proxy_username":     "smart-uxw575g61n3q_area-FR_life-30_session-PR9E309SR",
-    "proxy_password":     "bpKGpmIg89DtkfQO",
+    "proxy_username":     os.getenv("SMARTPROXY_USERNAME", ""),
+    "proxy_password":     os.getenv("SMARTPROXY_PASSWORD", ""),
     "output_dir":         "output_autoscout",
     "max_pages":          60,
     "headless":           True,
@@ -74,6 +74,8 @@ os.makedirs(CONFIG["output_dir"], exist_ok=True)
 
 
 def proxy_cfg():
+    if not CONFIG["proxy_username"] or not CONFIG["proxy_password"]:
+        return None
     return {
         "server":   f"http://{CONFIG['proxy_host']}:{CONFIG['proxy_port']}",
         "username": CONFIG["proxy_username"],

@@ -1,8 +1,12 @@
 import json
+import os
 from supabase import create_client
 
-SUPABASE_URL = "https://lrlskgxzrkjotcxevzag.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxybHNrZ3h6cmtqb3RjeGV2emFnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ3MDc2MSwiZXhwIjoyMDkwMDQ2NzYxfQ.CUkVj_NA8GXehEL2yM57gaMVUqgxKmZ6Bq6uZqvue_s"
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("Missing SUPABASE_URL/SUPABASE_KEY environment variables.")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 

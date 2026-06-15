@@ -2,22 +2,24 @@
 debug_leparking.py — Inspecte la structure de leparking.fr
   python debug_leparking.py
 """
-import time, json
+import os, time, json
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
 
 URL = "https://www.leparking.fr/voiture-occasion.html"
 UA  = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+SMARTPROXY_USERNAME = os.getenv("SMARTPROXY_USERNAME", "")
+SMARTPROXY_PASSWORD = os.getenv("SMARTPROXY_PASSWORD", "")
+proxy_config = None
+if SMARTPROXY_USERNAME and SMARTPROXY_PASSWORD:
+    proxy_config = {
+        "server":   "http://eu.smartproxy.net:3120",
+        "username": SMARTPROXY_USERNAME,
+        "password": SMARTPROXY_PASSWORD,
+    }
 
 with sync_playwright() as pw:
-    browser = pw.chromium.launch(
-        headless=False,
-        proxy={
-            "server":   "http://eu.smartproxy.net:3120",
-            "username": "smart-uxw575g61n3q_area-FR_life-60_session-MXrGdmT3nb",
-            "password": "bpKGpmIg89DtkfQO",
-        }
-    )
+    browser = pw.chromium.launch(headless=False, proxy=proxy_config)
     ctx = browser.new_context(user_agent=UA, locale="fr-FR",
                               viewport={"width": 1280, "height": 800})
     page = ctx.new_page()

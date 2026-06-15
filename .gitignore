@@ -3,9 +3,19 @@ output_aramis/
 
 # Secrets
 .env
+.env.*
+!.env.example
+credentials.json
+*.pem
+*.key
+*.p12
 
 # Données locales (non versionnées)
 scripts/data/*.json
+
+# Python cache
+__pycache__/
+*.pyc
 
 # Dépendances Node
 node_modules/
